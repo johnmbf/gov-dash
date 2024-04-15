@@ -2,7 +2,7 @@ library(shiny)
 library(ggplot2)
 
 processos <- read.csv('https://raw.githubusercontent.com/johnmbf/gov-dash/main/dados/processos.csv')
-legitimado <- readRDS(url("https://github.com/johnmbf/gov-dash/raw/main/dados/baixado_legitimados.rds","rb"))
+load(url("https://github.com/johnmbf/gov-dash/raw/main/dados/legitimados.RData"))
 
 ui <- fluidPage(
   titlePanel("Governadores"),
@@ -39,7 +39,7 @@ server <- function(input, output, session) {
   
   output$grafico_leg1 <- renderPlot({
     if (input$leg_tipo != "all"){
-      legitimado |>
+      baixado_legitimados |>
         dplyr::filter(!is.na(leg_passivo_tipo)) |>
         dplyr::mutate(cor = dplyr::case_when(
           leg_passivo_tipo == input$leg_tipo ~ "#D5A57C",
@@ -63,7 +63,7 @@ server <- function(input, output, session) {
           legend.title = element_blank(),
           legend.key = element_blank())
     } else {
-      legitimado |>
+      baixado_legitimados |>
         dplyr::filter(!is.na(leg_passivo_tipo)) |>
         ggplot() +
         aes(x = leg_passivo_tipo) +
@@ -87,7 +87,7 @@ server <- function(input, output, session) {
   
   output$grafico_leg2 <- renderPlot({
     if (input$leg_fed != "all"){
-      legitimado |>
+      baixado_legitimados |>
         dplyr::filter(!is.na(leg_passivo_fed)) |>
         dplyr::mutate(cor = dplyr::case_when(
           leg_passivo_fed == input$leg_fed ~ "#D5A57C",
@@ -111,7 +111,7 @@ server <- function(input, output, session) {
           legend.title = element_blank(),
           legend.key = element_blank())
     } else {
-      legitimado |>
+      baixado_legitimados |>
         dplyr::filter(!is.na(leg_passivo_fed)) |>
         ggplot() +
         aes(x = leg_passivo_fed) +
