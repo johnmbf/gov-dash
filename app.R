@@ -2,8 +2,7 @@ library(shiny)
 library(ggplot2)
 
 processos <- read.csv('https://raw.githubusercontent.com/johnmbf/gov-dash/main/dados/processos.csv')
-download.file('https://github.com/johnmbf/gov-dash/raw/main/dados/baixado_legitimados.rds', destfile = 'legitimado.rds')
-legitimado <- readRDS('legitimado.rds')
+legitimado <- readRDS(url("https://github.com/johnmbf/gov-dash/raw/main/dados/baixado_legitimados.rds","rb"))
 
 ui <- fluidPage(
   titlePanel("Governadores"),
