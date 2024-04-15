@@ -1,5 +1,148 @@
 ---
+title: 'O que fazem os Governadores no Supremo Tribunal Federal?'
 format: dashboard
 filters:
   - shinylive
 ---
+
+```{r}
+#| label: setup
+#| include: false
+
+library(ggplot2)
+processos <- read.csv('https://raw.githubusercontent.com/johnmbf/gov-dash/main/dados/processos.csv')
+```
+
+
+# Visão Geral
+
+## Column {width=30%}
+```{r}
+#| content: valuebox
+#| title: "Processos"
+list(
+  icon = "folder",
+  color = "#D5A57C",
+  value = nrow(processos)
+)
+```
+
+```{r}
+#| content: valuebox
+#| title: "Governadores"
+list(
+  icon = "people",
+  color = "#D5A57C",
+  value = length(unique(processos$leg_governador))
+)
+```
+
+```{r}
+#| content: valuebox
+#| title: "Transitado em julgado"
+
+julgados <- processos |>
+  dplyr::mutate(transito = ifelse(is.na(dt_transito), "Não", "Sim")) |>
+  dplyr::select(transito) |>
+  dplyr::filter(transito == "Sim") |>
+  nrow()
+
+list(
+  icon = "folder-check",
+  color = "#D5A57C",
+  value = julgados)
+```
+## Row
+:::{.card title="Processos"}
+```{r}
+proc <- processos |>
+  ggplot() +
+  aes(x = lubridate::year(dt_autuacao)) +
+  geom_bar(fill = "#D5A57C") +
+  labs(x = "Ano", y = "Nº de ações") +
+  scale_y_continuous(expand = c(0,0), limits = c(0,20)) +
+  theme_minimal() +
+  theme(
+    panel.grid = element_blank()
+  )
+plotly::ggplotly(proc)
+```
+:::
+
+# Governadores
+
+```{shinylive-r}
+#| standalone: true
+#| viewerHeight: 600
+
+# Pacotes e dados
+library(ggplot2)
+processos <- read.csv('https://raw.githubusercontent.com/johnmbf/gov-dash/main/dados/processos.csv')
+# legitimados <- read.csv('https://raw.githubusercontent.com/johnmbf/gov-dash/main/dados/legitimados.csv')
+
+# App
+library(shiny)
+
+ui <- fluidPage(
+  sidebarLayout(
+    sidebarPanel(
+      selectInput('gov', 'Governador:', choices = c("Todos", unique(processos$leg_governador)), selected = "Todos")
+    ),
+    mainPanel(
+      plotOutput('plot_gov')
+    )
+  )
+)
+
+server <- function(input, output, session) {
+  
+  output$plot_gov <- renderPlot({
+    if (input$gov == "Todos"){
+    processos |>
+  ggplot() +
+  aes(x = lubridate::year(dt_autuacao)) +
+  geom_bar(fill = '#91ABC0') +
+  scale_y_continuous(expand = c(0,0), limits = c(0,20)) +
+  scale_x_continuous(expand = c(0,0.5)) +
+  labs(
+    x = 'Ano',
+    y = 'Nº de ações'
+  ) +
+  theme(
+    plot.background = element_rect(fill = 'white'),
+    panel.background = element_blank(),
+    axis.ticks = element_blank(),
+    axis.line.x = element_line(),
+    panel.grid.major.y = element_line(color = 'grey30', linetype = 2),
+    legend.title = element_blank(),
+    legend.key = element_blank())
+  } else {
+  processos |>
+  dplyr::mutate(cor = dplyr::case_when(
+    leg_governador == input$gov ~ '#91ABC0',
+    TRUE ~ '#DADCD0'
+  )) |>
+  ggplot() +
+  aes(x = lubridate::year(dt_autuacao), fill = cor) +
+  geom_bar() +
+  scale_fill_identity('Governador', guide = 'legend', labels = c('#DADCD0' = "Outros", '#91ABC0' = input$gov)) +
+  scale_y_continuous(expand = c(0,0), limits = c(0,20)) +
+  scale_x_continuous(expand = c(0,0.5)) +
+  labs(
+    x = 'Ano',
+    y = 'Nº de ações'
+  ) +
+  theme(
+    plot.background = element_rect(fill = 'white'),
+    panel.background = element_blank(),
+    axis.ticks = element_blank(),
+    axis.line.x = element_line(),
+    panel.grid.major.y = element_line(color = 'grey30', linetype = 2),
+    legend.title = element_blank(),
+    legend.key = element_blank())
+    }
+  })
+}
+
+shinyApp(ui, server)
+```
